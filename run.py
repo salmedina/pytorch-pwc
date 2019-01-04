@@ -38,7 +38,6 @@ for strOption, strArgument in getopt.getopt(sys.argv[1:], '', [ strParameter[2:]
 	if strOption == '--first' and strArgument != '': arguments_strFirst = strArgument # path to the first frame
 	if strOption == '--second' and strArgument != '': arguments_strSecond = strArgument # path to the second frame
 	if strOption == '--out' and strArgument != '': arguments_strOut = strArgument # path to where the output should be stored
-# end
 
 ##########################################################
 
@@ -65,7 +64,6 @@ def Backward(tensorInput, tensorFlow):
 	tensorMask = tensorOutput[:, -1:, :, :]; tensorMask[tensorMask > 0.999] = 1.0; tensorMask[tensorMask < 1.0] = 0.0
 
 	return tensorOutput[:, :-1, :, :] * tensorMask
-# end
 
 ##########################################################
 
@@ -141,8 +139,6 @@ class Network(torch.nn.Module):
 				tensorSix = self.moduleSix(tensorFiv)
 
 				return [ tensorOne, tensorTwo, tensorThr, tensorFou, tensorFiv, tensorSix ]
-			# end
-		# end
 
 		class Decoder(torch.nn.Module):
 			def __init__(self, intLevel):
@@ -183,7 +179,6 @@ class Network(torch.nn.Module):
 				self.moduleSix = torch.nn.Sequential(
 					torch.nn.Conv2d(in_channels=intCurrent + 128 + 128 + 96 + 64 + 32, out_channels=2, kernel_size=3, stride=1, padding=1)
 				)
-			# end
 
 			def forward(self, tensorFirst, tensorSecond, objectPrevious):
 				tensorFlow = None
@@ -219,8 +214,6 @@ class Network(torch.nn.Module):
 					'tensorFlow': tensorFlow,
 					'tensorFeat': tensorFeat
 				}
-			# end
-		# end
 
 		class Refiner(torch.nn.Module):
 			def __init__(self):
@@ -241,12 +234,9 @@ class Network(torch.nn.Module):
 					torch.nn.LeakyReLU(inplace=False, negative_slope=0.1),
 					torch.nn.Conv2d(in_channels=32, out_channels=2, kernel_size=3, stride=1, padding=1, dilation=1)
 				)
-			# end
 
 			def forward(self, tensorInput):
 				return self.moduleMain(tensorInput)
-			# end
-		# end
 
 		self.moduleExtractor = Extractor()
 
@@ -272,8 +262,6 @@ class Network(torch.nn.Module):
 		objectEstimate = self.moduleTwo(tensorFirst[-5], tensorSecond[-5], objectEstimate)
 
 		return objectEstimate['tensorFlow'] + self.moduleRefiner(objectEstimate['tensorFeat'])
-	# end
-# end
 
 moduleNetwork = Network().cuda().eval()
 
@@ -314,13 +302,9 @@ def estimate(tensorFirst, tensorSecond):
 
 	tensorOutput.resize_(2, intHeight, intWidth).copy_(tensorFlow[0, :, :, :])
 
-	# tensorFirst = tensorFirst.cpu()
-	# tensorSecond = tensorSecond.cpu()
 	tensorOutput = tensorOutput.cpu()
 
 	return tensorOutput
-# end
-
 ##########################################################
 
 if __name__ == '__main__':
@@ -331,9 +315,8 @@ if __name__ == '__main__':
 
 	objectOutput = open(arguments_strOut, 'wb')
 
-	numpy.array([ 80, 73, 69, 72 ], numpy.uint8).tofile(objectOutput)
-	numpy.array([ tensorOutput.size(2), tensorOutput.size(1) ], numpy.int32).tofile(objectOutput)
+	numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
+	numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(objectOutput)
 	numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
 
 	objectOutput.close()
-# end
