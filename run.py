@@ -2,6 +2,7 @@
 
 import torch
 
+import argparse
 import getopt
 import math
 import numpy
@@ -19,25 +20,10 @@ except:
 ##########################################################
 
 assert(int(str('').join(torch.__version__.split('.')[0:3])) >= 40) # requires at least pytorch version 0.4.0
-
 torch.set_grad_enabled(False) # make sure to not compute gradients for computational performance
-
 torch.cuda.device(1) # change this if you have a multiple graphics cards and you want to utilize them
-
 torch.backends.cudnn.enabled = True # make sure to use cudnn for computational performance
 
-##########################################################
-
-arguments_strModel = 'default'
-arguments_strFirst = './images/first.png'
-arguments_strSecond = './images/second.png'
-arguments_strOut = './out.flo'
-
-for strOption, strArgument in getopt.getopt(sys.argv[1:], '', [ strParameter[2:] + '=' for strParameter in sys.argv[1::2] ])[0]:
-	if strOption == '--model' and strArgument != '': arguments_strModel = strArgument # which model to use
-	if strOption == '--first' and strArgument != '': arguments_strFirst = strArgument # path to the first frame
-	if strOption == '--second' and strArgument != '': arguments_strSecond = strArgument # path to the second frame
-	if strOption == '--out' and strArgument != '': arguments_strOut = strArgument # path to where the output should be stored
 
 ##########################################################
 
@@ -68,7 +54,7 @@ def Backward(tensorInput, tensorFlow):
 ##########################################################
 
 class Network(torch.nn.Module):
-	def __init__(self):
+	def __init__(self, model_name):
 		super(Network, self).__init__()
 
 		class Extractor(torch.nn.Module):
@@ -248,8 +234,7 @@ class Network(torch.nn.Module):
 
 		self.moduleRefiner = Refiner()
 
-		self.load_state_dict(torch.load('./network-' + arguments_strModel + '.pytorch'))
-	# end
+		self.load_state_dict(torch.load('./network-' + model_name + '.pytorch'))
 
 	def forward(self, tensorFirst, tensorSecond):
 		tensorFirst = self.moduleExtractor(tensorFirst)
@@ -263,11 +248,10 @@ class Network(torch.nn.Module):
 
 		return objectEstimate['tensorFlow'] + self.moduleRefiner(objectEstimate['tensorFeat'])
 
-moduleNetwork = Network().cuda().eval()
-
 ##########################################################
 
-def estimate(tensorFirst, tensorSecond):
+def estimate(arguments_strModel, tensorFirst, tensorSecond):
+	moduleNetwork = Network(arguments_strModel).cuda().eval()
 	tensorOutput = torch.FloatTensor()
 
 	assert(tensorFirst.size(1) == tensorSecond.size(1))
@@ -307,11 +291,15 @@ def estimate(tensorFirst, tensorSecond):
 	return tensorOutput
 ##########################################################
 
-if __name__ == '__main__':
-	tensorFirst = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
-	tensorSecond = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
+def process_image_pair(arguments_strModel, arguments_strFirst, arguments_strSecond, arguments_strOut):
+	tensorFirst = torch.FloatTensor(
+		numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+					1.0 / 255.0))
+	tensorSecond = torch.FloatTensor(
+		numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+					1.0 / 255.0))
 
-	tensorOutput = estimate(tensorFirst, tensorSecond)
+	tensorOutput = estimate(arguments_strModel, tensorFirst, tensorSecond)
 
 	objectOutput = open(arguments_strOut, 'wb')
 
@@ -320,3 +308,13 @@ if __name__ == '__main__':
 	numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
 
 	objectOutput.close()
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='Calculates optical flow through PWC-net')
+	parser.add_argument('--model', dest='strModel', type=str, default='default', help="Model's name")
+	parser.add_argument('--first', dest='strFirst', type=str, default='./images/first.png', help='Path to first image')
+	parser.add_argument('--second', dest='strSecond', type=str, default='./images/second.png', help='Path to second image')
+	parser.add_argument('--out', dest='strOut', type=str, default='./out.flo', help='Path to .flo save file')
+	args = parser.parse_args()
+
+	process_image_pair(args.strModel, args.strFirst, args.strSecond, args.strOut)
