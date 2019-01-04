@@ -288,38 +288,35 @@ def estimate(tensorFirst, tensorSecond):
 	intWidth = tensorFirst.size(2)
 	intHeight = tensorFirst.size(1)
 
-	assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
-	assert(intHeight == 436) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
+	# There is no guarantee for correctness if the input size is not the same when training the model
+	# comment this line out if you acknowledge this and want to continue
+	#assert(intWidth == 1024)
+	#assert(intHeight == 436)
 
-	if True:
-		tensorFirst = tensorFirst.cuda()
-		tensorSecond = tensorSecond.cuda()
-		tensorOutput = tensorOutput.cuda()
-	# end
+	tensorFirst = tensorFirst.cuda()
+	tensorSecond = tensorSecond.cuda()
+	tensorOutput = tensorOutput.cuda()
 
-	if True:
-		tensorPreprocessedFirst = tensorFirst.view(1, 3, intHeight, intWidth)
-		tensorPreprocessedSecond = tensorSecond.view(1, 3, intHeight, intWidth)
 
-		intPreprocessedWidth = int(math.floor(math.ceil(intWidth / 64.0) * 64.0))
-		intPreprocessedHeight = int(math.floor(math.ceil(intHeight / 64.0) * 64.0))
+	tensorPreprocessedFirst = tensorFirst.view(1, 3, intHeight, intWidth)
+	tensorPreprocessedSecond = tensorSecond.view(1, 3, intHeight, intWidth)
 
-		tensorPreprocessedFirst = torch.nn.functional.interpolate(input=tensorPreprocessedFirst, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
-		tensorPreprocessedSecond = torch.nn.functional.interpolate(input=tensorPreprocessedSecond, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
+	intPreprocessedWidth = int(math.floor(math.ceil(intWidth / 64.0) * 64.0))
+	intPreprocessedHeight = int(math.floor(math.ceil(intHeight / 64.0) * 64.0))
 
-		tensorFlow = 20.0 * torch.nn.functional.interpolate(input=moduleNetwork(tensorPreprocessedFirst, tensorPreprocessedSecond), size=(intHeight, intWidth), mode='bilinear', align_corners=False)
+	tensorPreprocessedFirst = torch.nn.functional.interpolate(input=tensorPreprocessedFirst, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
+	tensorPreprocessedSecond = torch.nn.functional.interpolate(input=tensorPreprocessedSecond, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
 
-		tensorFlow[:, 0, :, :] *= float(intWidth) / float(intPreprocessedWidth)
-		tensorFlow[:, 1, :, :] *= float(intHeight) / float(intPreprocessedHeight)
+	tensorFlow = 20.0 * torch.nn.functional.interpolate(input=moduleNetwork(tensorPreprocessedFirst, tensorPreprocessedSecond), size=(intHeight, intWidth), mode='bilinear', align_corners=False)
 
-		tensorOutput.resize_(2, intHeight, intWidth).copy_(tensorFlow[0, :, :, :])
-	# end
+	tensorFlow[:, 0, :, :] *= float(intWidth) / float(intPreprocessedWidth)
+	tensorFlow[:, 1, :, :] *= float(intHeight) / float(intPreprocessedHeight)
 
-	if True:
-		tensorFirst = tensorFirst.cpu()
-		tensorSecond = tensorSecond.cpu()
-		tensorOutput = tensorOutput.cpu()
-	# end
+	tensorOutput.resize_(2, intHeight, intWidth).copy_(tensorFlow[0, :, :, :])
+
+	# tensorFirst = tensorFirst.cpu()
+	# tensorSecond = tensorSecond.cpu()
+	tensorOutput = tensorOutput.cpu()
 
 	return tensorOutput
 # end
