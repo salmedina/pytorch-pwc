@@ -301,13 +301,13 @@ def process_image_pair(strModel, strFirst, strSecond, strOut):
 
 	tensorOutput = estimate(strModel, tensorFirst, tensorSecond)
 
-	objectOutput = open(strOut, 'wb')
+	fileOutput = open(strOut, 'wb')
 
-	numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
-	numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(objectOutput)
-	numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
+	numpy.array([80, 73, 69, 72], numpy.uint8).tofile(fileOutput)
+	numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(fileOutput)
+	numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(fileOutput)
 
-	objectOutput.close()
+	fileOutput.close()
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Calculates optical flow through PWC-net')
