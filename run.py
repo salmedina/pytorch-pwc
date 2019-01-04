@@ -291,17 +291,17 @@ def estimate(arguments_strModel, tensorFirst, tensorSecond):
 	return tensorOutput
 ##########################################################
 
-def process_image_pair(arguments_strModel, arguments_strFirst, arguments_strSecond, arguments_strOut):
+def process_image_pair(strModel, strFirst, strSecond, strOut):
 	tensorFirst = torch.FloatTensor(
-		numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+		numpy.array(PIL.Image.open(strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
 					1.0 / 255.0))
 	tensorSecond = torch.FloatTensor(
-		numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+		numpy.array(PIL.Image.open(strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
 					1.0 / 255.0))
 
-	tensorOutput = estimate(arguments_strModel, tensorFirst, tensorSecond)
+	tensorOutput = estimate(strModel, tensorFirst, tensorSecond)
 
-	objectOutput = open(arguments_strOut, 'wb')
+	objectOutput = open(strOut, 'wb')
 
 	numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
 	numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(objectOutput)
