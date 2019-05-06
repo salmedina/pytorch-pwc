@@ -1,14 +1,17 @@
-#!/usr/bin/zsh
+#!/usr/bin/env bash
 
-video_dir="/mnt/Alfheim/Data/DIVA_Proposals/OF_Profiling/videos"
-frames_dir="/mnt/Alfheim/Data/DIVA_Proposals/trajectory_images/heu_neg_traj_props"
-output_dir="/mnt/Alfheim/Data/DIVA_Proposals/OF_Profiling/pwcnet"
+video_dir="/home/salvadom/Data/OF_Profiling/videos"
+frames_dir="/home/salvadom/Data/OF_Profiling/frames"
+output_dir="/home/salvadom/Data/OF_Profiling/turing"
 
 rm -rf ${output_dir}/*
 
 for video_path in ${video_dir}/*.mp4; do
-    video_name=${video_path:t:r}
+    file_name=$(basename -- "$video_path")
+    video_name="${file_name%.*}"
     video_frames_dir=${frames_dir}/${video_name}
     video_output_dir=${output_dir}/${video_name}
-    python runvideo.py --framesDir ${video_frames_dir} --outputDir ${video_output_dir}
+    echo "${video_output_dir}"
+    mkdir -p ${video_output_dir}
+    python runbatch.py --framesDir ${video_frames_dir} --outputDir ${video_output_dir}
 done
