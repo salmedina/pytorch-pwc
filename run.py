@@ -307,6 +307,11 @@ def process_image_pair(strModel, strFirst, strSecond, strOut):
 	numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(fileOutput)
 	numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(fileOutput)
 
+	flow_x = numpy.array(tensorOutput.numpy()[1, :, :], numpy.float32)
+	print(tensorOutput.size(2), tensorOutput.size(1))
+	print(numpy.max(flow_x))
+	print(numpy.min(flow_x))
+
 	fileOutput.close()
 
 if __name__ == '__main__':
